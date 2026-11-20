@@ -126,4 +126,3 @@ class NeuralNetwork:
         net.weights = [np.asarray(w, dtype=np.float32) for w in payload["weights"]]
         net.biases = [np.asarray(b, dtype=np.float32) for b in payload["biases"]]
         return net
-ss

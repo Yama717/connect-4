@@ -28,13 +28,14 @@ def play(
     human_first: bool = True,
     show_ai_analysis: bool = False,
     model_type: str = "linear",
+    depth: int = 1,
 ) -> None:
     board = Connect4Board()
-    ai = AIPlayer(model_path=MODEL_PATHS[model_type])
+    ai = AIPlayer(model_path=MODEL_PATHS[model_type], depth=depth)
     human = "X" if human_first else "O"
     ai_player = "O" if human_first else "X"
 
-    print(f"Connect-4 — {MODEL_LABELS[model_type]} opponent")
+    print(f"Connect-4 — {MODEL_LABELS[model_type]} opponent (depth {depth})")
     print(f"You are {human}. AI is {ai_player}. Columns are numbered 1-7.\n")
 
     while not board.is_terminal():
@@ -61,16 +62,16 @@ def play(
             board.drop(col, ai_player)
             best = evaluations[0]
             if show_ai_analysis:
-                print("AI move analysis (model score on resulting positions):")
+                print("AI move analysis (score from the AI player's perspective):")
                 for rank, ev in enumerate(evaluations, start=1):
                     marker = " <--" if rank == 1 else ""
                     print(
                         f"  {rank}. col {ev.col + 1}  "
-                        f"P(X wins)={ev.p_x_wins:.3f}  score={ev.score:.3f}  [{ev.reason}]{marker}"
+                        f"P(X wins)={ev.p_x_wins:.3f}  score={ev.score:.9f}  [{ev.reason}]{marker}"
                     )
             print(
                 f"AI plays column {col + 1}  "
-                f"P(X wins)={best.p_x_wins:.3f}  score={best.score:.3f}  [{best.reason}]\n"
+                f"P(X wins)={best.p_x_wins:.3f}  score={best.score:.9f}  [{best.reason}]\n"
             )
 
         winner = board.winner()
@@ -104,12 +105,21 @@ def main() -> None:
         action="store_true",
         help="Print all candidate columns and model scores when the AI moves",
     )
+    parser.add_argument(
+        "--depth",
+        type=int,
+        default=1,
+        help="Number of moves to look ahead, counting both players (default: 1)",
+    )
     args = parser.parse_args()
+    if args.depth < 1:
+        parser.error("--depth must be at least 1")
     try:
         play(
             human_first=not args.ai_first,
             show_ai_analysis=args.show_ai,
             model_type=args.model,
+            depth=args.depth,
         )
     except FileNotFoundError as exc:
         print(exc, file=sys.stderr)
@@ -126,4 +136,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-s
